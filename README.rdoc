@@ -76,11 +76,12 @@ image is in back). You will be returned a MiniMagick::Image instance for the new
 
   image1 = MiniMagick::Image.open('foreground.png')
   image2 = MiniMagick::Image.open('background.png')
-  output_image = MiniMagick::Composite.new(image1, image2, 'composite_image_file.jpg', :gravity => 'NorthEast')
+  output_image = MiniMagick::Composite.new(image1, image2, 'jpg', :gravity => 'NorthEast')
+  output_image.write('combined_image.jpg')
 
-The above example would combine the two images into a file named 'composite_image_file.jpg'
-and, if the two images are different sizes, will stick the top image into the upper right (north east)
-corner of the bottom image.
+The above example would combine the two images into a new JPEG file and, if the two images are 
+different sizes it will stick the top image into the upper right (north east) corner of the bottom image.
+The the image is saved using the standard Image.save method.
 
 The 'composite' script has several options, see here: http://www.imagemagick.org/script/composite.php
 

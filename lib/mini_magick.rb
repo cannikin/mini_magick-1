@@ -146,8 +146,6 @@ module MiniMagick
   # Composes two images together via ImageMagick's 'composite' script
   class Composite
     
-    attr_reader :image1, :image2, :output_path
-    
     # Class Methods
     # -------------
     
@@ -158,26 +156,36 @@ module MiniMagick
     #
     #   image1 = MiniMagick::Image.open('foreground.png')
     #   image2 = MiniMagick::Image.open('background.png')
-    #   output_image = MiniMagick::Composite.new(image1, image2, 'composite_image_file.jpg', :gravity => 'NorthEast')
+    #   output_image = MiniMagick::Composite.new(image1, image2, 'jpg', :gravity => 'NorthEast')
+    #   output_image.write('combined_image.jpg')
     #
-    # The above example would combine the two images into a file named 'composite_image_file.jpg'
-    # and if the two images are different sizes it will stick the top image into the upper right (north east)
-    # corner of the bottom image.
+    # The above example would combine the two images into a new JPEG file and, if the two images are 
+    # different sizes it will stick the top image into the upper right (north east) corner of the bottom image.
+    # The the image is saved using the standard Image.save method.
     #
     # The 'composite' script has several options, see here: http://www.imagemagick.org/script/composite.php
-    def self.new(image1, image2, output_path, opts={})
-      @image1 = image1
-      @image2 = image2
-      @output_path = output_path
+    def self.new(*args)
+
+      image1 = args[0]
+      image2 = args[1]
+      output_extension = args[2] || 'jpg'
+      opts = args[3] || {}
+      
+      begin
+        tempfile = ImageTempFile.new(output_extension)
+        tempfile.binmode
+      ensure
+        tempfile.close
+      end
       
       args = opts.collect { |key,value| "-#{key.to_s} #{value.to_s}" }  # collect hash parts into arguments
-      args.push(@image1.path)
-      args.push(@image2.path)
-      args.push(@output_path)
-      
+      args.push(image1.path)
+      args.push(image2.path)
+      args.push(tempfile.path)
+
       CommandRunner::run('composite',*args)
       
-      return Image.open(output_path)
+      return Image.open(tempfile.path)
     end
     
   end
