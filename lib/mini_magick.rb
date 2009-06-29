@@ -44,7 +44,7 @@ module MiniMagick
       @tempfile = tempfile # ensures that the tempfile will stick around until this image is garbage collected.
 
       # Ensure that the file is an image
-      run_command("identify", @path)
+      CommandRunner::run("identify", @path)
     end
 
     # For reference see http://www.imagemagick.org/script/command-line-options.php#format
@@ -52,28 +52,28 @@ module MiniMagick
       # Why do I go to the trouble of putting in newlines? Because otherwise animated gifs screw everything up
       case value.to_s
       when "format"
-        run_command("identify", "-format", format_option("%m"), @path).split("\n")[0]
+        CommandRunner::run("identify", "-format", format_option("%m"), @path).split("\n")[0]
       when "height"
-        run_command("identify", "-format", format_option("%h"), @path).split("\n")[0].to_i
+        CommandRunner::run("identify", "-format", format_option("%h"), @path).split("\n")[0].to_i
       when "width"
-        run_command("identify", "-format", format_option("%w"), @path).split("\n")[0].to_i
+        CommandRunner::run("identify", "-format", format_option("%w"), @path).split("\n")[0].to_i
       when "dimensions"
-        run_command("identify", "-format", format_option("%w %h"), @path).split("\n")[0].split.map{|v|v.to_i}
+        CommandRunner::run("identify", "-format", format_option("%w %h"), @path).split("\n")[0].split.map{|v|v.to_i}
       when "size"
         File.size(@path) # Do this because calling identify -format "%b" on an animated gif fails!
       when "original_at"
         # Get the EXIF original capture as a Time object
         Time.local(*self["EXIF:DateTimeOriginal"].split(/:|\s+/)) rescue nil
       when /^EXIF\:/i
-        run_command('identify', '-format', "\"%[#{value}]\"", @path).chop
+        CommandRunner::run('identify', '-format', "\"%[#{value}]\"", @path).chop
       else
-        run_command('identify', '-format', "\"#{value}\"", @path).split("\n")[0]
+        CommandRunner::run('identify', '-format', "\"#{value}\"", @path).split("\n")[0]
       end
     end
 
     # Sends raw commands to imagemagick's mogrify command. The image path is automatically appended to the command
     def <<(*args)
-      run_command("mogrify", *args << @path)
+      CommandRunner::run("mogrify", *args << @path)
     end
 
     # This is a 'special' command because it needs to change @path to reflect the new extension
@@ -81,7 +81,7 @@ module MiniMagick
     # pages (starting with 0).  You can choose which page you want to manipulate.  We default to the
     # first page.
     def format(format, page=0)
-      run_command("mogrify", "-format", format, @path)
+      CommandRunner::run("mogrify", "-format", format, @path)
 
       old_path = @path.dup
       @path.sub!(/(\.\w+)?$/, ".#{format}")
@@ -103,7 +103,7 @@ module MiniMagick
     # Writes the temporary image that we are using for processing to the output path
     def write(output_path)
       FileUtils.copy_file @path, output_path
-      run_command "identify", output_path # Verify that we have a good image
+      CommandRunner::run "identify", output_path # Verify that we have a good image
     end
 
     # Give you raw data back
@@ -119,7 +119,7 @@ module MiniMagick
     # Look here to find all the commands (http://www.imagemagick.org/script/mogrify.php)
     def method_missing(symbol, *args)
       args.push(@path) # push the path onto the end
-      run_command("mogrify", "-#{symbol}", *args)
+      CommandRunner::run("mogrify", "-#{symbol}", *args)
       self
     end
 
@@ -127,7 +127,7 @@ module MiniMagick
     def combine_options(&block)
       c = CommandBuilder.new
       block.call c
-      run_command("mogrify", *c.args << @path)
+      CommandRunner::run("mogrify", *c.args << @path)
     end
 
     # Check to see if we are running on win32 -- we need to escape things differently
@@ -140,7 +140,34 @@ module MiniMagick
       windows? ? "#{format}\\n" : "#{format}\\\\n"
     end
 
-    def run_command(command, *args)
+  end
+  
+
+  class Composite
+    
+    attr_reader :image1, :image2, :output_path
+    
+    def self.new(image1, image2, output_path, opts={})
+      @image1 = image1
+      @image2 = image2
+      @output_path = output_path
+      
+      args = opts.collect { |key,value| "-#{key.to_s} #{value.to_s}" }  # collect hash parts into arguments
+      args.push(@image1.path)
+      args.push(@image2.path)
+      args.push(@output_path)
+      
+      CommandRunner::run('composite',*args)
+      
+      return Image.open(output_path)
+    end
+    
+  end
+  
+  
+  class CommandRunner
+    
+    def self.run(command, *args)
       args.collect! do |arg|        
         # args can contain characters like '>' so we must escape them, but don't quote switches
         if arg !~ /^\+|\-/
@@ -159,7 +186,9 @@ module MiniMagick
         output
       end
     end
+    
   end
+  
 
   class CommandBuilder
     attr :args
