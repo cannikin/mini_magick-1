@@ -22,8 +22,8 @@ Gem::Specification.new do |s|
      "mini_magick.gemspec",
      "test/actually_a_gif.jpg",
      "test/animation.gif",
-     "test/composite_test.rb",
      "test/command_builder_test.rb",
+     "test/composite_test.rb",
      "test/image_temp_file_test.rb",
      "test/image_test.rb",
      "test/leaves.tiff",
@@ -39,6 +39,7 @@ Gem::Specification.new do |s|
   s.summary = %q{Manipulate images with minimal use of memory.}
   s.test_files = [
     "test/command_builder_test.rb",
+    "test/composite_test.rb",
      "test/image_temp_file_test.rb",
      "test/image_test.rb"
   ]
