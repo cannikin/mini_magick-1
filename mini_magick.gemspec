@@ -22,6 +22,7 @@ Gem::Specification.new do |s|
      "mini_magick.gemspec",
      "test/actually_a_gif.jpg",
      "test/animation.gif",
+     "test/composite_test.rb",
      "test/command_builder_test.rb",
      "test/image_temp_file_test.rb",
      "test/image_test.rb",
