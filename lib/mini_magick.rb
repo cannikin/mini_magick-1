@@ -143,10 +143,28 @@ module MiniMagick
   end
   
 
+  # Composes two images together via ImageMagick's 'composite' script
   class Composite
     
     attr_reader :image1, :image2, :output_path
     
+    # Class Methods
+    # -------------
+    
+    # To create a composite simply call Composite.new with the images you want composite,
+    # the path to the output file and any command line options you may want. Note that the
+    # images should be passed in the order you want them stacked (first image is on top, second
+    # image is in back). You will be returned a MiniMagick::Image instance for the new composited image:
+    #
+    #   image1 = MiniMagick::Image.open('foreground.png')
+    #   image2 = MiniMagick::Image.open('background.png')
+    #   output_image = MiniMagick::Composite.new(image1, image2, 'composite_image_file.jpg', :gravity => 'NorthEast')
+    #
+    # The above example would combine the two images into a file named 'composite_image_file.jpg'
+    # and if the two images are different sizes it will stick the top image into the upper right (north east)
+    # corner of the bottom image.
+    #
+    # The 'composite' script has several options, see here: http://www.imagemagick.org/script/composite.php
     def self.new(image1, image2, output_path, opts={})
       @image1 = image1
       @image2 = image2
@@ -165,8 +183,11 @@ module MiniMagick
   end
   
   
+  # Does the job of running commands in the shell.
   class CommandRunner
     
+    # Class Methods
+    # -------------
     def self.run(command, *args)
       args.collect! do |arg|        
         # args can contain characters like '>' so we must escape them, but don't quote switches

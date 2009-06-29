@@ -20,8 +20,8 @@ their 100 Meg memory limit.
 == Solution!
 
 Using MiniMagick the ruby processes memory remains small (it spawns
-ImageMagick's command line program mogrify which takes up some memory
-as well, but is much smaller compared to RMagick)
+ImageMagick's command line programs mogrify and composite which takes 
+up some memory as well, but is much smaller compared to RMagick)
 
 MiniMagick gives you access to all the commandline options ImageMagick
 has (Found here http://www.imagemagick.org/script/mogrify.php)
@@ -65,6 +65,24 @@ Want to get some meta-information out?
 
 For more on the format command see
 http://www.imagemagick.org/script/command-line-options.php#format
+
+
+== Compositing
+
+To create a composite simply call Composite.new with the images you want composite,
+the path to the output file and any command line options you may want. Note that the
+images should be passed in the order you want them stacked (first image is on top, second
+image is in back). You will be returned a MiniMagick::Image instance for the new composited image:
+
+  image1 = MiniMagick::Image.open('foreground.png')
+  image2 = MiniMagick::Image.open('background.png')
+  output_image = MiniMagick::Composite.new(image1, image2, 'composite_image_file.jpg', :gravity => 'NorthEast')
+
+The above example would combine the two images into a file named 'composite_image_file.jpg'
+and, if the two images are different sizes, will stick the top image into the upper right (north east)
+corner of the bottom image.
+
+The 'composite' script has several options, see here: http://www.imagemagick.org/script/composite.php
 
 
 == Requirements
