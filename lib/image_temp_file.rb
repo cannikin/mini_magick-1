@@ -2,8 +2,8 @@ require "tempfile"
 
 module MiniMagick
   class ImageTempFile < Tempfile
-    def make_tmpname(ext, n)
-      'mini_magick%d-%d%s' % [$$, n, ext ? ".#{ext}" : '']
+    def make_tmpname(ext)
+      'mini_magick%d-%d%s' % [$$, Time.now.to_f, ext ? ".#{ext}" : '']
     end
   end
 end
